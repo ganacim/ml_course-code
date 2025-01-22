@@ -3,7 +3,7 @@
 # )
 add_executable(main
     main.cpp
-    kernel.cu kernel.cuh
+    kernel.cu kernel.h
 )
 
 # target_compile_features(kernels PUBLIC cxx_std_11)
