@@ -16,6 +16,7 @@ void help(const char *name){
     cout << "    --print -- prints all matrices." << endl;
     cout << "    --save:<output_file> -- saves matrices M1 and M2 to file." << endl;
     cout << "    --load:<input_file> -- load matrices M1 and M2 from file." << endl;
+    cout << "    --cpu[:<output_file>] -- run CPU version and save result to file (optional)." << endl;
 }
 
 int main(int argc, const char* argv[]) {
@@ -36,6 +37,11 @@ int main(int argc, const char* argv[]) {
     string output_file_name = "output.txt";
     regex const load_re{R"~(--load:([\w\-_\/]+\.?\w*))~"};
     string input_file_name = "input.txt";
+    // running options
+    bool do_run_cpu = true;
+    regex const cpu_re{R"~(--cpu:([\w\-_\/]+\.?\w*))~"};
+    bool do_save_cpu_result = false;
+    string cpu_result_file = "cpu_result.txt";
     // other options
     bool do_print_matrix = false;
     // Matrices
@@ -103,6 +109,13 @@ int main(int argc, const char* argv[]) {
                 exit(1);
             }
         }
+        else if (strncmp(argv[i], "--cpu:", 5) == 0){
+            do_run_cpu = true;
+            if (regex_match(arg, m, cpu_re)){
+                do_save_cpu_result = true;
+                cpu_result_file = m[1].str();
+            }
+        }
     }
     if (do_load_matrix){
         cout << "Loading matrices from file: " << input_file_name << endl;
@@ -127,11 +140,17 @@ int main(int argc, const char* argv[]) {
         save_matrices(output_file_name, m1, m2, m1_rows, m1_cols, m2_cols);
     }
     // Run the CPU version
-    // cout << "Running on CPU: " << (run_cpu ? "yes" : "no") << endl;
-    vector<float> result_cpu = cpu_multiplication(m1, m2, m1_rows, m1_cols, m2_cols);
-    if (do_print_matrix){
-        cout << endl << "CPU result:" << endl;
-        print_matrix(result_cpu, m1_rows);
+    cout << "Running on CPU: " << (do_run_cpu ? "yes" : "no") << endl;
+    if (do_run_cpu) {
+        vector<float> result_cpu = cpu_multiplication(m1, m2, m1_rows, m1_cols, m2_cols);
+        if (do_save_cpu_result){
+            cout << "Saving CPU result to file: " << cpu_result_file << endl;
+            save_matrix(cpu_result_file, result_cpu, m1_rows, m2_cols);
+        }
+        if (do_print_matrix){
+            cout << endl << "CPU result:" << endl;
+            print_matrix(result_cpu, m1_rows);
+        }
     }
     return 0;
 }

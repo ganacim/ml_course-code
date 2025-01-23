@@ -36,6 +36,27 @@ void print_matrix(const vector<float> &matrix, unsigned int rows)
     }
 }
 
+void save_matrix(string file_name,
+                    const vector<float>& m,
+                    unsigned int m_rows,
+                    unsigned int m_cols)
+{
+    ofstream file(file_name);
+    if (file.is_open()) {
+        file << m_rows << " " << m_cols << endl;
+        for (int i = 0; i < m_rows; i++) {
+            for (int j = 0; j < m_cols; j++) {
+                file << m[i * m_cols + j] << " ";
+            }
+            file << endl;
+        }
+        file.close();
+    }
+    else {
+        cout << "Unable to open file" << endl;
+    }
+}
+
 void save_matrices(string file_name,
                     const vector<float>& m1,
                     const vector<float>& m2,
