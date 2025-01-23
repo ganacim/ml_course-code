@@ -6,6 +6,7 @@
 #include "kernel.h"
 #include "matrix.h"
 #include "cpu.h"
+#include "timer.h"
 
 using namespace std;
 
@@ -20,6 +21,7 @@ void help(const char *name){
 }
 
 int main(int argc, const char* argv[]) {
+    auto& timer = util::timers.cpu_add("Total time");
     cout << "Matrix Multiplication Example." << endl;
     // Variables for holding parameters
     // matrix size
@@ -152,5 +154,7 @@ int main(int argc, const char* argv[]) {
             print_matrix(result_cpu, m1_rows);
         }
     }
+    timer.stop();
+    util::timers.flush();
     return 0;
 }

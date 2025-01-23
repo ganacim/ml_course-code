@@ -3,6 +3,8 @@ add_executable(matrix_multiplication
     kernel.cu kernel.h
     matrix.cpp matrix.h
     cpu.cpp cpu.h
+    timer.cpp timer.h
+    error.cpp error.h
 )
 
 # if using add_library
