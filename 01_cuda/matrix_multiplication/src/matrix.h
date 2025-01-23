@@ -3,7 +3,7 @@
 
 #include <vector>
 
-std::vector<float> create_random_matrix(int matrix_size);
-void print_matrix(const std::vector<float> &matrix, int matrix_size);
+std::vector<float> create_random_matrix(unsigned int rows, unsigned int cols);
+void print_matrix(const std::vector<float> &matrix, unsigned int rows);
 
 #endif
