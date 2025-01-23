@@ -14,26 +14,12 @@ void help(const char *name){
     cout << "    --size:<int>    Size of the matrix (default: 1024)" << endl;
 }
 
-int match(const char *argument, const char *option, const char **value) {
-    int length = (int) strlen(option);
-    if (option[length-1] == ':') length--;
-    if (strncmp(argument, option, length) == 0 && 
-        (argument[length] == ':' || argument[length] == '(' 
-            || !argument[length])) {
-        if (value) {
-            if (option[length] == ':' && argument[length] == ':') length++;
-            *value = argument+length;
-        }
-        return 1;
-    }
-    else return 0;
-}
-
 int main(int argc, const char* argv[]) {
     cout << "Matrix Multiplication Example." << endl;
     // size of the matrix (assuming square matrix)
     // m2_rows = m1_cols !!!!
     unsigned int m1_rows = 1024, m1_cols = 1024, m2_cols = 1024;
+    // https://stackoverflow.com/questions/56710024/what-is-a-raw-string
     std::regex const msize1_re{R"~(--size:(\d+))~"}; 
     std::regex const msize3_re{R"~(--size:(\d+):(\d+):(\d+))~"}; 
     bool do_print_matrix = false;
@@ -55,6 +41,7 @@ int main(int argc, const char* argv[]) {
         const char *value;
         std::smatch m;
         const std::string arg(argv[i]);
+        // --size:m1_rows:m1_cols:m2_cols
         if(regex_match(arg, m, msize3_re)) {
             if (m.size() == 4){
                 m1_rows = std::stoi(m[1]);
@@ -66,6 +53,7 @@ int main(int argc, const char* argv[]) {
                 exit(1);
             }
         }
+        // --size:matrix_size // for square matrix
         else if(regex_match(arg, m, msize1_re)) {
             if (m.size() == 2) {
                 m1_rows = m1_cols = m2_cols = stoi(m[1]);
@@ -75,6 +63,7 @@ int main(int argc, const char* argv[]) {
                 exit(1);
             }
         }
+        // --print
         else if (strcmp(argv[i], "--print") == 0){
             do_print_matrix = true;
         }
