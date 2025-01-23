@@ -15,25 +15,31 @@ void help(const char *name){
     cout << "           example: --size:1024:1024:1024 or --size:1024" << endl;
     cout << "    --print -- prints all matrices." << endl;
     cout << "    --save:<output_file> -- saves matrices M1 and M2 to file." << endl;
-
+    cout << "    --load:<input_file> -- load matrices M1 and M2 from file." << endl;
 }
 
 int main(int argc, const char* argv[]) {
     cout << "Matrix Multiplication Example." << endl;
     // Variables for holding parameters
     // matrix size
-    std::regex const msize1_re{R"~(--size:(\d+))~"}; 
-    std::regex const msize3_re{R"~(--size:(\d+):(\d+):(\d+))~"}; 
+    regex const msize1_re{R"~(--size:(\d+))~"}; 
+    regex const msize3_re{R"~(--size:(\d+):(\d+):(\d+))~"}; 
     // https://stackoverflow.com/questions/56710024/what-is-a-raw-string
+    // size of the matrices
     unsigned int m1_rows = 1024, m1_cols = 1024, m2_cols = 1024;
     // save and load
     bool do_save_matrix = false;
+    bool do_load_matrix = false;
     // does not work with full paths e.g.: "../output.txt"
     // but works with "folder/output.txt"
-    std::regex const save_re{R"~(--save:([\w\-_\/]+\.?\w*))~"};
+    regex const save_re{R"~(--save:([\w\-_\/]+\.?\w*))~"};
     string output_file_name = "output.txt";
+    regex const load_re{R"~(--load:([\w\-_\/]+\.?\w*))~"};
+    string input_file_name = "input.txt";
     // other options
     bool do_print_matrix = false;
+    // Matrices
+    vector<float> m1, m2;
     // Parse arguments
     if (argc <= 1){
         help(argv[0]);
@@ -87,24 +93,41 @@ int main(int argc, const char* argv[]) {
                 exit(1);
             }
         }
+        else if (strncmp(argv[i], "--load:", 7) == 0){
+            if (regex_match(arg, m, load_re)){
+                do_load_matrix = true;
+                input_file_name = m[1].str();
+            }
+            else {
+                cout << "Invalid input file name: '" << argv[i] + 7 << "'" << endl;
+                exit(1);
+            }
+        }
+    }
+    if (do_load_matrix){
+        cout << "Loading matrices from file: " << input_file_name << endl;
+        load_matrices(input_file_name, m1, m2, m1_rows, m1_cols, m2_cols);
+    }
+    else {
+        cout << "Creating random matrices." << endl;
+        // Creata a matrix of size matrix_size x matrix_size
+        m1 = create_random_matrix(m1_rows, m1_cols);
+        m2 = create_random_matrix(m1_cols, m2_cols);
     }
     // print running parameters
     cout << "Matrix size: M1["<< m1_rows << ", " << m1_cols << "] M2[" << m1_cols << ", " << m2_cols << "]" << endl;
-    // cout << "Running on CPU: " << (run_cpu ? "yes" : "no") << endl;
-    // Creata a matrix of size matrix_size x matrix_size
-    vector<float> m1 = create_random_matrix(m1_rows, m1_cols);
-    vector<float> m2 = create_random_matrix(m1_cols, m2_cols);
-    if (do_save_matrix){
-        cout << "Saving matrices to file: " << output_file_name << endl;
-        save_matrices(output_file_name, m1, m2, m1_rows, m1_cols, m2_cols);
-    }
     if (do_print_matrix){
         cout << "Matrix 1:" << endl;
         print_matrix(m1, m1_rows);
         cout << "Matrix 2:" << endl;
         print_matrix(m2, m1_cols);
     }
+    if (do_save_matrix){
+        cout << "Saving matrices to file: " << output_file_name << endl;
+        save_matrices(output_file_name, m1, m2, m1_rows, m1_cols, m2_cols);
+    }
     // Run the CPU version
+    // cout << "Running on CPU: " << (run_cpu ? "yes" : "no") << endl;
     vector<float> result_cpu = cpu_multiplication(m1, m2, m1_rows, m1_cols, m2_cols);
     if (do_print_matrix){
         cout << endl << "CPU result:" << endl;

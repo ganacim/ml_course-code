@@ -66,3 +66,41 @@ void save_matrices(string file_name,
         cout << "Unable to open file" << endl;
     }
 }
+
+bool load_matrices(string file_name,
+                    vector<float>& m1,
+                    vector<float>& m2,
+                    unsigned int& m1_rows,
+                    unsigned int& m1_cols,
+                    unsigned int& m2_cols)
+{
+    ifstream file(file_name);
+    if (file.is_open()) {
+        file >> m1_rows >> m1_cols;
+        m1.resize(m1_rows * m1_cols);
+        for (int i = 0; i < m1_rows; i++) {
+            for (int j = 0; j < m1_cols; j++) {
+                file >> m1[i * m1_cols + j];
+            }
+        }
+        unsigned int m2_rows;
+        file >> m2_rows >> m2_cols;
+        m2.resize(m2_rows * m2_cols);
+        for (int i = 0; i < m2_rows; i++) {
+            for (int j = 0; j < m2_cols; j++) {
+                file >> m2[i * m2_cols + j];
+            }
+        }
+        if (m1_cols != m2_rows) {
+            cout << "Invalid matrix sizes: [" << m1_rows << ", " << m1_cols 
+                    << "] and [" << m2_rows << ", " << m2_cols << "]" << endl;
+            return false;
+        }
+        file.close();
+        return true;
+    }
+    else {
+        cout << "Unable to open file" << endl;
+        return false;
+    }
+}
