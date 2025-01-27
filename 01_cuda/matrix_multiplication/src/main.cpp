@@ -144,7 +144,7 @@ int main(int argc, const char* argv[]) {
     // Run the CPU version
     cout << "Running on CPU: " << (do_run_cpu ? "yes" : "no") << endl;
     if (do_run_cpu) {
-        vector<float> result_cpu = cpu_multiplication(m1, m2, m1_rows, m1_cols, m2_cols);
+        vector<float> result_cpu = cpu_naive_multiplication(m1, m2, m1_rows, m1_cols, m2_cols);
         if (do_save_cpu_result){
             cout << "Saving CPU result to file: " << cpu_result_file << endl;
             save_matrix(cpu_result_file, result_cpu, m1_rows, m2_cols);
