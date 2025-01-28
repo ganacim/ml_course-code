@@ -28,23 +28,23 @@ int match(const string& arg, const char *pattern, smatch &m){
 
 int main(int argc, const char* argv[]) {
     auto& timer = util::timers.cpu_add("Total time");
-    cout << "Matrix Multiplication Example." << endl;
+    cout << "# Matrix Multiplication." << endl;
     // Variables for holding parameters
     // size of the matrices
     unsigned int m1_rows = 1024, m1_cols = 1024, m2_cols = 1024;
     // save and load
-    bool do_save_matrix = false;
-    bool do_load_matrix = false;
+    bool save_matrix_flag = false;
+    bool load_matrix_flag = false;
     string output_file_name = "output.txt";
     string input_file_name = "input.txt";
     // running options
-    bool do_run_cpu = false;
-    bool do_save_cpu_result = false;
+    bool run_cpu_flag = false;
+    bool save_cpu_result_flag = false;
     string cpu_result_file = "cpu_result.txt";
     // other options
-    bool do_print_matrix = false;
+    bool print_matrix_flag = false;
     // Matrices
-    vector<float> m1, m2;
+    vector<float> m1, m2, cpu_result;
     // Parse arguments
     if (argc <= 1){
         help(argv[0]);
@@ -74,65 +74,66 @@ int main(int argc, const char* argv[]) {
         }
         // --print
         else if (match(argv[i], "--print", m)){
-            do_print_matrix = true;
+            print_matrix_flag = true;
         }
         // --save:output_matrix_file
         else if (match(argv[i], R"~(--save:([\w\-_\/]+(?:\.\w+)?))~", m)){
-            do_save_matrix = true;
+            save_matrix_flag = true;
             output_file_name = m[1].str();
         }
         // --load:input_matrix_file
         else if (match(argv[i], R"~(--load:([\w\-_\/]+(?:\.\w+)?))~", m)){
-            do_load_matrix = true;
+            load_matrix_flag = true;
             input_file_name = m[1].str();
         }
         // --cpu[:output_file]
         else if (match(arg, R"~(--cpu(?::([\w\-_\/]+(?:\.\w+)?))?)~", m)){
-            do_run_cpu = true;
+            run_cpu_flag = true;
             if (m.size() == 2 and m[1].str().size() > 0){
-                do_save_cpu_result = true;
+                save_cpu_result_flag = true;
                 cpu_result_file = m[1].str();
             }
         }
         // Invalid argument
         else {
-            cout << "Invalid argument: " << argv[i] << endl;
+            cout << "! Invalid argument: " << argv[i] << endl;
             exit(1);
         }
     }
-    if (do_load_matrix){
-        cout << "Loading matrices from file: " << input_file_name << endl;
+    if (load_matrix_flag){
+        cout << "> Loading matrices from file: " << input_file_name << endl;
         load_matrices(input_file_name, m1, m2, m1_rows, m1_cols, m2_cols);
     }
     else {
-        cout << "Creating random matrices." << endl;
+        cout << "> Creating random matrices." << endl;
         // Creata a matrix of size matrix_size x matrix_size
         m1 = create_random_matrix(m1_rows, m1_cols);
         m2 = create_random_matrix(m1_cols, m2_cols);
     }
     // print running parameters
-    cout << "Matrix size: M1["<< m1_rows << ", " << m1_cols << "] M2[" << m1_cols << ", " << m2_cols << "]" << endl;
-    if (do_print_matrix){
-        cout << "Matrix 1:" << endl;
-        print_matrix(m1, m1_rows);
-        cout << "Matrix 2:" << endl;
-        print_matrix(m2, m1_cols);
-    }
-    if (do_save_matrix){
-        cout << "Saving matrices to file: " << output_file_name << endl;
+    cout << ">> size: M1["<< m1_rows << ", " << m1_cols << "] M2[" << m1_cols << ", " << m2_cols << "]" << endl;
+    if (save_matrix_flag){
+        cout << "> Saving matrices to file: " << output_file_name << endl;
         save_matrices(output_file_name, m1, m2, m1_rows, m1_cols, m2_cols);
     }
     // Run the CPU version
-    cout << "Running on CPU: " << (do_run_cpu ? "yes" : "no") << endl;
-    if (do_run_cpu) {
-        vector<float> result_cpu = cpu_naive_multiplication(m1, m2, m1_rows, m1_cols, m2_cols);
-        if (do_save_cpu_result){
-            cout << "Saving CPU result to file: " << cpu_result_file << endl;
-            save_matrix(cpu_result_file, result_cpu, m1_rows, m2_cols);
+    cout << "> Running on CPU: " << (run_cpu_flag ? "yes" : "no") << endl;
+    if (run_cpu_flag) {
+        cpu_result = cpu_naive_multiplication(m1, m2, m1_rows, m1_cols, m2_cols);
+        if (save_cpu_result_flag){
+            cout << ">> Saving CPU result to file: " << cpu_result_file << endl;
+            save_matrix(cpu_result_file, cpu_result, m1_rows, m2_cols);
         }
-        if (do_print_matrix){
-            cout << endl << "CPU result:" << endl;
-            print_matrix(result_cpu, m1_rows);
+    }
+    if (print_matrix_flag){
+        cout << "> Printing Matrices" << endl;
+        cout << ">> Matrix 1:" << endl;
+        print_matrix(m1, m1_rows);
+        cout << ">> Matrix 2:" << endl;
+        print_matrix(m2, m1_cols);
+        if (run_cpu_flag){
+            cout << endl << ">> CPU result:" << endl;
+            print_matrix(cpu_result, m1_rows);
         }
     }
     timer.stop();
