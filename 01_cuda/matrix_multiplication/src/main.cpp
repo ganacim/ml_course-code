@@ -20,28 +20,25 @@ void help(const char *name){
     cout << "    --cpu[:<output_file>] -- run CPU version and save result to file (optional)." << endl;
 }
 
+int match(const string& arg, const char *pattern, smatch &m){
+    const regex re_str{string(pattern)};
+    regex_match(arg, m, re_str);
+    return m.size();
+}
+
 int main(int argc, const char* argv[]) {
     auto& timer = util::timers.cpu_add("Total time");
     cout << "Matrix Multiplication Example." << endl;
     // Variables for holding parameters
-    // matrix size
-    regex const msize1_re{R"~(--size:(\d+))~"}; 
-    regex const msize3_re{R"~(--size:(\d+):(\d+):(\d+))~"}; 
-    // https://stackoverflow.com/questions/56710024/what-is-a-raw-string
     // size of the matrices
     unsigned int m1_rows = 1024, m1_cols = 1024, m2_cols = 1024;
     // save and load
     bool do_save_matrix = false;
     bool do_load_matrix = false;
-    // does not work with full paths e.g.: "../output.txt"
-    // but works with "folder/output.txt"
-    regex const save_re{R"~(--save:([\w\-_\/]+\.?\w*))~"};
     string output_file_name = "output.txt";
-    regex const load_re{R"~(--load:([\w\-_\/]+\.?\w*))~"};
     string input_file_name = "input.txt";
     // running options
-    bool do_run_cpu = true;
-    regex const cpu_re{R"~(--cpu:([\w\-_\/]+\.?\w*))~"};
+    bool do_run_cpu = false;
     bool do_save_cpu_result = false;
     string cpu_result_file = "cpu_result.txt";
     // other options
@@ -60,63 +57,47 @@ int main(int argc, const char* argv[]) {
             exit(0);
         }
     }
-    for (int i = 0; i < argc; i++){
+    for (int i = 1; i < argc; i++){
         const char *value;
         std::smatch m;
         const std::string arg(argv[i]);
-        // --size:m1_rows:m1_cols:m2_cols
-        if(regex_match(arg, m, msize3_re)) {
-            if (m.size() == 4){
-                m1_rows = std::stoi(m[1]);
-                m1_cols = std::stoi(m[2]);
-                m2_cols = std::stoi(m[3]);
-            }
-            else {
-                cout << "Invalid matrix size: " << arg << endl;
-                exit(1);
-            }
+        // --size:m1_rows // m1_rows = m1_cols = m2_cols
+        if (match(arg, R"~(--size:(\d+))~", m) == 2){
+            // https://stackoverflow.com/questions/56710024/what-is-a-raw-string
+            m1_rows = m1_cols = m2_cols = std::stoi(m[1]);
         }
-        // --size:matrix_size // for square matrix
-        else if(regex_match(arg, m, msize1_re)) {
-            if (m.size() == 2) {
-                m1_rows = m1_cols = m2_cols = stoi(m[1]);
-            }
-            else {
-                cout << "Invalid matrix size: " << arg << endl;
-                exit(1);
-            }
+        // --size:m1_rows:m1_cols:m2_cols
+        else if (match(arg, R"~(--size:(\d+):(\d+):(\d+))~", m) == 4){
+            m1_rows = std::stoi(m[1]);
+            m1_cols = std::stoi(m[2]);
+            m2_cols = std::stoi(m[3]);
         }
         // --print
-        else if (strcmp(argv[i], "--print") == 0){
+        else if (match(argv[i], "--print", m)){
             do_print_matrix = true;
         }
         // --save:output_matrix_file
-        else if (strncmp(argv[i], "--save:", 7) == 0){
-            if (regex_match(arg, m, save_re)){
-                do_save_matrix = true;
-                output_file_name = m[1].str();
-            }
-            else {
-                cout << "Invalid output file name: '" << argv[i] + 7 << "'" << endl;
-                exit(1);
-            }
+        else if (match(argv[i], R"~(--save:([\w\-_\/]+(?:\.\w+)?))~", m)){
+            do_save_matrix = true;
+            output_file_name = m[1].str();
         }
-        else if (strncmp(argv[i], "--load:", 7) == 0){
-            if (regex_match(arg, m, load_re)){
-                do_load_matrix = true;
-                input_file_name = m[1].str();
-            }
-            else {
-                cout << "Invalid input file name: '" << argv[i] + 7 << "'" << endl;
-                exit(1);
-            }
+        // --load:input_matrix_file
+        else if (match(argv[i], R"~(--load:([\w\-_\/]+(?:\.\w+)?))~", m)){
+            do_load_matrix = true;
+            input_file_name = m[1].str();
         }
-        else if (strncmp(argv[i], "--cpu:", 5) == 0){
+        // --cpu[:output_file]
+        else if (match(arg, R"~(--cpu(?::([\w\-_\/]+(?:\.\w+)?))?)~", m)){
             do_run_cpu = true;
-            if (regex_match(arg, m, cpu_re)){
+            if (m.size() == 2 and m[1].str().size() > 0){
                 do_save_cpu_result = true;
                 cpu_result_file = m[1].str();
             }
+        }
+        // Invalid argument
+        else {
+            cout << "Invalid argument: " << argv[i] << endl;
+            exit(1);
         }
     }
     if (do_load_matrix){
