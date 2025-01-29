@@ -40,11 +40,15 @@ vector<float> cuda_multiplication(const std::vector<float>& m1,
     // Copy data from host to device
     cudaMemcpy(d_m1, m1.data(), m1_rows * m1_cols * sizeof(float), cudaMemcpyHostToDevice);
     cudaMemcpy(d_m2, m2.data(), m1_cols * m2_cols * sizeof(float), cudaMemcpyHostToDevice);
+    // // sync cuda device
+    // cudaDeviceSynchronize();
     // Define grid and block size
     dim3 grid(m1_rows, m2_cols);
     dim3 block(1, 1);
     // Launch kernel
     matrix_multiplication<<<grid, block>>>(d_m1, d_m2, d_result, m1_rows, m1_cols, m2_cols);
+    // // sync cuda device
+    // cudaDeviceSynchronize();
     // Copy data from device to host
     cudaMemcpy(result.data(), d_result, m1_rows * m2_cols * sizeof(float), cudaMemcpyDeviceToHost);
     // Free memory on the device
