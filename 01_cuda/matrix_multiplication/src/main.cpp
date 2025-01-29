@@ -56,11 +56,14 @@ int main(int argc, const char* argv[]) {
     bool run_openmp_flag = false;
     bool save_openmp_result_flag = false;
     string openmp_result_file = "openmp_result.txt";
+    bool run_cuda_flag = false;
+    bool save_cuda_result_flag = false;
+    string cuda_result_file = "cuda_result.txt";
     // other options
     bool print_matrix_flag = false;
     bool run_compare_flag = false;
     // Matrices
-    vector<float> m1, m2, cpu_result, openmp_result;
+    vector<float> m1, m2, cpu_result, openmp_result, cuda_result;
     // Parse arguments
     if (argc <= 1){
         help(argv[0]);
@@ -118,6 +121,14 @@ int main(int argc, const char* argv[]) {
                 openmp_result_file = m[1].str();
             }
         }
+        // --cuda[:output_file]
+        else if (match(arg, R"~(--cuda(?::([\w\-_\/]+(?:\.\w+)?))?)~", m)){
+            run_cuda_flag = true;
+            if (m.size() == 2 and m[1].str().size() > 0){
+                save_cuda_result_flag = true;
+                cuda_result_file = m[1].str();
+            }
+        }
         // --compare
         else if (match(arg, "--compare", m)){
             run_compare_flag = true;
@@ -173,6 +184,16 @@ int main(int argc, const char* argv[]) {
                 save_matrix(openmp_result_file, openmp_result, m1_rows, m2_cols);
             }
         }
+        // Run the CUDA version
+        cout << "> Running on CUDA: " << (run_cuda_flag ? "yes" : "no") << endl;
+        if (run_cuda_flag) {
+            cuda_result = cuda_multiplication(m1, m2, m1_rows, m1_cols, m2_cols);
+            if (save_cuda_result_flag){
+                cout << ">> Saving CUDA result to file: " << cuda_result_file << endl;
+                nvtx3::scoped_range r("Save CUDA Result");
+                save_matrix(cuda_result_file, cuda_result, m1_rows, m2_cols);
+            }
+        }
         if (run_compare_flag){
             nvtx3::scoped_range r("Compare Results");
             if (cpu_result.size() == openmp_result.size()){
@@ -182,6 +203,14 @@ int main(int argc, const char* argv[]) {
             }
             else {
                 cout << "! CPU and OpenMP results have different sizes." << endl;
+            }
+            if (cpu_result.size() == cuda_result.size()){
+                cout << "> Comparing CPU and CUDA results." << endl;
+                float max_diff = max_norm(cpu_result, cuda_result);
+                cout << ">> max difference(abs): " << max_diff << endl;
+            }
+            else {
+                cout << "! CPU and CUDA results have different sizes." << endl;
             }
         }
         if (print_matrix_flag){
@@ -194,6 +223,14 @@ int main(int argc, const char* argv[]) {
             if (run_cpu_flag){
                 cout << endl << ">> CPU result:" << endl;
                 print_matrix(cpu_result, m1_rows);
+            }
+            if (run_openmp_flag){
+                cout << endl << ">> OpenMP result:" << endl;
+                print_matrix(openmp_result, m1_rows);
+            }
+            if (run_cuda_flag){
+                cout << endl << ">> CUDA result:" << endl;
+                print_matrix(cuda_result, m1_rows);
             }
         }
     }
