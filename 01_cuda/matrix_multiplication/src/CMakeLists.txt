@@ -7,7 +7,7 @@ add_executable(matrix_multiplication
     error.cpp error.h
 )
 
-target_link_libraries(matrix_multiplication PRIVATE nvtx3-cpp)
+target_link_libraries(matrix_multiplication PRIVATE nvtx3-cpp OpenMP::OpenMP_CXX)
 
 # if using add_library
 # target_compile_features(template PUBLIC cxx_std_11)

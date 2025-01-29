@@ -12,6 +12,9 @@ enable_language(CXX)
 include(CheckLanguage)
 check_language(CUDA)
 
+# Enable OpenMP
+find_package(OpenMP REQUIRED)
+
 # output path for project's binaries
 #set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 

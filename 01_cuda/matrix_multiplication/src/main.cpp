@@ -20,6 +20,7 @@ void help(const char *name){
     cout << "    --save:<output_file> -- saves matrices M1 and M2 to file." << endl;
     cout << "    --load:<input_file> -- load matrices M1 and M2 from file." << endl;
     cout << "    --cpu[:<output_file>] -- run CPU version and save result to file (optional)." << endl;
+    cout << "    --openmp[:<output_file>] -- run CPU (with OpenMP support) version and save result to file (optional)." << endl;
 }
 
 int match(const string& arg, const char *pattern, smatch &m){
@@ -43,10 +44,13 @@ int main(int argc, const char* argv[]) {
     bool run_cpu_flag = false;
     bool save_cpu_result_flag = false;
     string cpu_result_file = "cpu_result.txt";
+    bool run_openmp_flag = false;
+    bool save_openmp_result_flag = false;
+    string openmp_result_file = "openmp_result.txt";
     // other options
     bool print_matrix_flag = false;
     // Matrices
-    vector<float> m1, m2, cpu_result;
+    vector<float> m1, m2, cpu_result, openmp_result;
     // Parse arguments
     if (argc <= 1){
         help(argv[0]);
@@ -96,6 +100,14 @@ int main(int argc, const char* argv[]) {
                 cpu_result_file = m[1].str();
             }
         }
+        // --openmp[:output_file]
+        else if (match(arg, R"~(--openmp(?::([\w\-_\/]+(?:\.\w+)?))?)~", m)){
+            run_openmp_flag = true;
+            if (m.size() == 2 and m[1].str().size() > 0){
+                save_openmp_result_flag = true;
+                openmp_result_file = m[1].str();
+            }
+        }
         // Invalid argument
         else {
             cout << "! Invalid argument: " << argv[i] << endl;
@@ -135,6 +147,16 @@ int main(int argc, const char* argv[]) {
                 cout << ">> Saving CPU result to file: " << cpu_result_file << endl;
                 nvtx3::scoped_range r("Save CPU Result");
                 save_matrix(cpu_result_file, cpu_result, m1_rows, m2_cols);
+            }
+        }
+        // Run the OpenMP version
+        cout << "> Running on OpenMP: " << (run_openmp_flag ? "yes" : "no") << endl;
+        if (run_openmp_flag) {
+            openmp_result = openmp_multiplication(m1, m2, m1_rows, m1_cols, m2_cols);
+            if (save_openmp_result_flag){
+                cout << ">> Saving OpenMP result to file: " << openmp_result_file << endl;
+                nvtx3::scoped_range r("Save OpenMP Result");
+                save_matrix(openmp_result_file, openmp_result, m1_rows, m2_cols);
             }
         }
         if (print_matrix_flag){
