@@ -1,6 +1,12 @@
-#ifndef _KERNEL_H_
-#define _KERNEL_H_
+#ifndef _CUDA_H_
+#define _CUDA_H_
 
-void kernel_wrapper();
+#include <vector>
+
+std::vector<float> cuda_multiplication(const std::vector<float>& m1,
+                                    const std::vector<float>& m2,
+                                    unsigned int m1_rows,
+                                    unsigned int m1_cols,
+                                    unsigned int m2_cols);
 
 #endif

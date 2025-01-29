@@ -1,6 +1,6 @@
 add_executable(matrix_multiplication
     main.cpp
-    kernel.cu kernel.h
+    cuda.cu cuda.h
     matrix.cpp matrix.h
     cpu.cpp cpu.h
     timer.cpp timer.h

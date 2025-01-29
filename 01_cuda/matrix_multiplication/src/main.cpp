@@ -6,7 +6,7 @@
 
 #include <nvtx3/nvtx3.hpp>
 
-#include "kernel.h"
+#include "cuda.h"
 #include "matrix.h"
 #include "cpu.h"
 #include "timer.h"
