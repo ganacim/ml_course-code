@@ -3,6 +3,8 @@
 #include <cstring>
 #include <regex>
 
+#include <nvtx3/nvtx3.hpp>
+
 #include "kernel.h"
 #include "matrix.h"
 #include "cpu.h"
@@ -100,40 +102,52 @@ int main(int argc, const char* argv[]) {
             exit(1);
         }
     }
-    if (load_matrix_flag){
-        cout << "> Loading matrices from file: " << input_file_name << endl;
-        load_matrices(input_file_name, m1, m2, m1_rows, m1_cols, m2_cols);
-    }
-    else {
-        cout << "> Creating random matrices." << endl;
-        // Creata a matrix of size matrix_size x matrix_size
-        m1 = create_random_matrix(m1_rows, m1_cols);
-        m2 = create_random_matrix(m1_cols, m2_cols);
-    }
-    // print running parameters
-    cout << ">> size: M1["<< m1_rows << ", " << m1_cols << "] M2[" << m1_cols << ", " << m2_cols << "]" << endl;
-    if (save_matrix_flag){
-        cout << "> Saving matrices to file: " << output_file_name << endl;
-        save_matrices(output_file_name, m1, m2, m1_rows, m1_cols, m2_cols);
-    }
-    // Run the CPU version
-    cout << "> Running on CPU: " << (run_cpu_flag ? "yes" : "no") << endl;
-    if (run_cpu_flag) {
-        cpu_result = cpu_naive_multiplication(m1, m2, m1_rows, m1_cols, m2_cols);
-        if (save_cpu_result_flag){
-            cout << ">> Saving CPU result to file: " << cpu_result_file << endl;
-            save_matrix(cpu_result_file, cpu_result, m1_rows, m2_cols);
+    // Sleep so the profiler can attach
+    cout << "Sleeping for 1 second." << endl;
+    sleep(1);
+    //
+    { // Scope for nvtx3
+        nvtx3::scoped_range r("Pipeline");    
+        if (load_matrix_flag){
+            cout << "> Loading matrices from file: " << input_file_name << endl;
+            nvtx3::scoped_range r("Load Matrices");
+            load_matrices(input_file_name, m1, m2, m1_rows, m1_cols, m2_cols);
         }
-    }
-    if (print_matrix_flag){
-        cout << "> Printing Matrices" << endl;
-        cout << ">> Matrix 1:" << endl;
-        print_matrix(m1, m1_rows);
-        cout << ">> Matrix 2:" << endl;
-        print_matrix(m2, m1_cols);
-        if (run_cpu_flag){
-            cout << endl << ">> CPU result:" << endl;
-            print_matrix(cpu_result, m1_rows);
+        else {
+            // Create matrices
+            cout << "> Creating random matrices." << endl;
+            nvtx3::scoped_range r("Creating Matrices");
+            m1 = create_random_matrix(m1_rows, m1_cols);
+            m2 = create_random_matrix(m1_cols, m2_cols);
+        }
+        // print running parameters
+        cout << ">> size: M1["<< m1_rows << ", " << m1_cols << "] M2[" << m1_cols << ", " << m2_cols << "]" << endl;
+        if (save_matrix_flag){
+            cout << "> Saving matrices to file: " << output_file_name << endl;
+            nvtx3::scoped_range r("Save Matrices");
+            save_matrices(output_file_name, m1, m2, m1_rows, m1_cols, m2_cols);
+        }
+        // Run the CPU version
+        cout << "> Running on CPU: " << (run_cpu_flag ? "yes" : "no") << endl;
+        if (run_cpu_flag) {
+            cpu_result = cpu_naive_multiplication(m1, m2, m1_rows, m1_cols, m2_cols);
+            if (save_cpu_result_flag){
+                cout << ">> Saving CPU result to file: " << cpu_result_file << endl;
+                nvtx3::scoped_range r("Save CPU Result");
+                save_matrix(cpu_result_file, cpu_result, m1_rows, m2_cols);
+            }
+        }
+        if (print_matrix_flag){
+            cout << "> Printing Matrices" << endl;
+            nvtx3::scoped_range r("Print Matrices");
+            cout << ">> Matrix 1:" << endl;
+            print_matrix(m1, m1_rows);
+            cout << ">> Matrix 2:" << endl;
+            print_matrix(m2, m1_cols);
+            if (run_cpu_flag){
+                cout << endl << ">> CPU result:" << endl;
+                print_matrix(cpu_result, m1_rows);
+            }
         }
     }
     timer.stop();

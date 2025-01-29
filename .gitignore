@@ -2,3 +2,4 @@
 **/bin/*
 **/build
 .vscode/
+01_cuda/NVTX
