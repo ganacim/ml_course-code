@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <cstring>
 #include <regex>
+#include <cmath>
 
 #include <nvtx3/nvtx3.hpp>
 
@@ -21,6 +22,14 @@ void help(const char *name){
     cout << "    --load:<input_file> -- load matrices M1 and M2 from file." << endl;
     cout << "    --cpu[:<output_file>] -- run CPU version and save result to file (optional)." << endl;
     cout << "    --openmp[:<output_file>] -- run CPU (with OpenMP support) version and save result to file (optional)." << endl;
+}
+
+float max_norm(const vector<float>& m1, const vector<float>& m2){
+    float max_diff = 0.0;
+    for (int i = 0; i < m1.size(); i++){
+        max_diff = max(max_diff, abs(m1[i] - m2[i]));
+    }
+    return max_diff;
 }
 
 int match(const string& arg, const char *pattern, smatch &m){
@@ -49,6 +58,7 @@ int main(int argc, const char* argv[]) {
     string openmp_result_file = "openmp_result.txt";
     // other options
     bool print_matrix_flag = false;
+    bool run_compare_flag = false;
     // Matrices
     vector<float> m1, m2, cpu_result, openmp_result;
     // Parse arguments
@@ -108,6 +118,10 @@ int main(int argc, const char* argv[]) {
                 openmp_result_file = m[1].str();
             }
         }
+        // --compare
+        else if (match(arg, "--compare", m)){
+            run_compare_flag = true;
+        }
         // Invalid argument
         else {
             cout << "! Invalid argument: " << argv[i] << endl;
@@ -157,6 +171,17 @@ int main(int argc, const char* argv[]) {
                 cout << ">> Saving OpenMP result to file: " << openmp_result_file << endl;
                 nvtx3::scoped_range r("Save OpenMP Result");
                 save_matrix(openmp_result_file, openmp_result, m1_rows, m2_cols);
+            }
+        }
+        if (run_compare_flag){
+            nvtx3::scoped_range r("Compare Results");
+            if (cpu_result.size() == openmp_result.size()){
+                cout << "> Comparing CPU and OpenMP results." << endl;
+                float max_diff = max_norm(cpu_result, openmp_result);
+                cout << ">> max difference(abs): " << max_diff << endl;
+            }
+            else {
+                cout << "! CPU and OpenMP results have different sizes." << endl;
             }
         }
         if (print_matrix_flag){
