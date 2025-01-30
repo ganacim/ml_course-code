@@ -187,7 +187,13 @@ int main(int argc, const char* argv[]) {
         // Run the CUDA version
         cout << "> Running on CUDA: " << (run_cuda_flag ? "yes" : "no") << endl;
         if (run_cuda_flag) {
-            cuda_result = cuda_multiplication(m1, m2, m1_rows, m1_cols, m2_cols);
+            try {
+                cuda_result = cuda_multiplication(m1, m2, m1_rows, m1_cols, m2_cols);
+            }
+            catch (const std::runtime_error &e){
+                cout << "! CUDA error: " << e.what() << endl;
+                exit(1);
+            }
             if (save_cuda_result_flag){
                 cout << ">> Saving CUDA result to file: " << cuda_result_file << endl;
                 nvtx3::scoped_range r("Save CUDA Result");
@@ -211,6 +217,14 @@ int main(int argc, const char* argv[]) {
             }
             else {
                 cout << "! CPU and CUDA results have different sizes." << endl;
+            }
+            if (openmp_result.size() == cuda_result.size()){
+                cout << "> Comparing OpenMP and CUDA results." << endl;
+                float max_diff = max_norm(openmp_result, cuda_result);
+                cout << ">> max difference(abs): " << max_diff << endl;
+            }
+            else {
+                cout << "! OpenMP and CUDA results have different sizes." << endl;
             }
         }
         if (print_matrix_flag){
