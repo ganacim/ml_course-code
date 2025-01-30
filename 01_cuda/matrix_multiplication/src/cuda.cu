@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <exception>
+#include <cmath>
 
 using namespace std;
 
@@ -14,6 +15,11 @@ __global__ void matrix_multiplication(float *m1, float *m2, float *result, unsig
     // Get the row and column of the current element
     unsigned int i = blockIdx.x*blockDim.x + threadIdx.x;
     unsigned int j = blockIdx.y*blockDim.y + threadIdx.y;
+
+    // Return if the current element is out of bounds
+    if (i >= m1_rows || j >= m2_cols) {
+        return;
+    }
 
     // Compute the dot product of the row of m1 and the column of m2
     float value = 0;
@@ -46,10 +52,10 @@ vector<float> cuda_multiplication(const std::vector<float>& m1,
     // cudaDeviceSynchronize();
     // Define grid and block size
     int n = 16;
-    dim3 grid(m1_rows/n, m2_cols/n, 1);
+    dim3 grid(ceil((float)m1_rows/n), ceil((float)m2_cols/n), 1);
     dim3 block(n, n, 1);
-    cout << "grid: " << grid.x << " " << grid.y << " " << grid.z << endl;
-    cout << "block: " << block.x << " " << block.y << " " << block.z << endl;
+    // cout << "grid: " << grid.x << " " << grid.y << " " << grid.z << endl;
+    // cout << "block: " << block.x << " " << block.y << " " << block.z << endl;
     // Launch kernel
     matrix_multiplication<<<grid, block>>>(d_m1, d_m2, d_result, m1_rows, m1_cols, m2_cols);
     // // sync cuda device
