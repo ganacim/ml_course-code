@@ -9,3 +9,4 @@ data/*
 mlc/model/spiral/model.py
 *.png
 sandbox.ipynb
+models/*
